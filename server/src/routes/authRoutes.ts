@@ -3,10 +3,11 @@ import express from "express"
 
 const router = express.Router()
 
-const { signUp, login, getAuthenticatedUser } = authController
+const { signUp, login, getAuthenticatedUser, protect } = authController
+// const { protect } = require("../middleware/authMiddleware")
 
-router.get("/", login)
+router.post("/", login)
 router.post("/signup", signUp)
-router.post("/me", getAuthenticatedUser)
+router.get("/me", protect, getAuthenticatedUser)
 
 export default router
