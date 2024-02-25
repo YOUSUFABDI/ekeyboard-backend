@@ -1,41 +1,14 @@
 import { RequestHandler } from "express"
 import createHttpError from "http-errors"
 import adminModel from "../models/adminModel"
+import {
+  CreateProductDT,
+  LoginBodyDT,
+  UpdateProductDT,
+  signupBodyDT,
+} from "lib/types"
 
-interface LoginBody {
-  username: string
-  password: string
-}
-
-interface signupBody {
-  fullName?: string
-  email?: string
-  phone?: string
-  address?: string
-  username?: string
-  password?: string
-}
-
-const login: RequestHandler<unknown, unknown, LoginBody, unknown> = async (
-  req,
-  res,
-  next
-) => {
-  const { username, password } = req.body
-
-  try {
-    const user = await adminModel.findOne({ adminUserName: username }).exec()
-    if (!user) {
-      throw createHttpError(401, "Invalid username or password")
-    }
-
-    res.json({ message: "Login successful", user })
-  } catch (error) {
-    next(error)
-  }
-}
-
-const signup: RequestHandler<unknown, unknown, signupBody, unknown> = async (
+const signup: RequestHandler<unknown, unknown, signupBodyDT, unknown> = async (
   req,
   res,
   next
@@ -63,4 +36,58 @@ const signup: RequestHandler<unknown, unknown, signupBody, unknown> = async (
   }
 }
 
-export default { login, signup }
+const login: RequestHandler<unknown, unknown, LoginBodyDT, unknown> = async (
+  req,
+  res,
+  next
+) => {
+  const { username, password } = req.body
+
+  try {
+    const user = await adminModel.findOne({ adminUserName: username }).exec()
+    if (!user) {
+      throw createHttpError(401, "User not found")
+    }
+
+    if (user.adminPassword !== password) {
+      throw createHttpError(400, "Username or password incorrect")
+    }
+
+    res.json({ message: "Login successful", user })
+  } catch (error) {
+    next(error)
+  }
+}
+
+const getMe: RequestHandler = (req, res, next) => {}
+
+const createProduct: RequestHandler<
+  unknown,
+  unknown,
+  CreateProductDT,
+  unknown
+> = async (req, res, next) => {}
+
+const updateProduct: RequestHandler<
+  unknown,
+  unknown,
+  UpdateProductDT,
+  unknown
+> = async (req, res, next) => {}
+
+const deleteProduct: RequestHandler = (req, res, next) => {}
+
+const getProducts: RequestHandler = (req, res, next) => {}
+
+const getOverviews: RequestHandler = (req, res, next) => {}
+
+export default {
+  signup,
+  login,
+  getMe,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  getProducts,
+  getOverviews,
+}

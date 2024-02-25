@@ -1,4 +1,5 @@
 import express, { NextFunction, Request, Response } from "express"
+import cors from "cors"
 import authRouter from "./routes/authRoutes"
 import adminRouter from "./routes/adminRoutes"
 import createHttpError, { isHttpError } from "http-errors"
@@ -6,6 +7,7 @@ import createHttpError, { isHttpError } from "http-errors"
 const app = express()
 
 app.use(express.json())
+app.use(cors())
 
 app.use("/auth", authRouter)
 app.use("/admin", adminRouter)

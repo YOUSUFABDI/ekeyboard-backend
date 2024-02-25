@@ -17,14 +17,14 @@ const productSchema = new Schema({
     type: String,
     required: true,
   },
-  stars:{
+  likes: {
     type: Number,
     required: true,
   },
   stock: {
     type: Number,
     required: true,
-  }
+  },
 })
 
 type Product = InferSchemaType<typeof productSchema>
