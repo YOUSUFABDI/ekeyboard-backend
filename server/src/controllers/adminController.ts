@@ -16,6 +16,7 @@ const login: RequestHandler<unknown, unknown, LoginBody, unknown> = async (
 
   try {
     const user = await adminModel.findOne({ adminUserName: username }).exec();
+    console.log("userka", user)
     if (!user) {
       throw createHttpError(401, "Invalid username or password");
     }
