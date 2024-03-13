@@ -29,3 +29,7 @@ export type UpdateProductDT = {
   productLikes: number
   productStock: number
 }
+
+export type updateProductParams = {
+  productID: string
+}
