@@ -84,7 +84,15 @@ const signUp: RequestHandler<unknown, unknown, SignUpBody, unknown> = async (
       password: hashedPassword,
     })
 
-    res.status(201).json(newUser)
+    if (newUser) {
+      res.status(201).json({
+        token: generateToken(newUser._id),
+        username: newUser.username,
+        _id: newUser.id,
+      })
+    } else {
+      throw createHttpError(400, "Invalid user data")
+    }
   } catch (error) {
     console.log(error)
     next(error)
@@ -155,13 +163,14 @@ const protect: RequestHandler<unknown, unknown, unknown, unknown> = async (
 
       return next()
     } else {
-      throw createHttpError(401, "You are not Loggin, please Loggin")
+      throw createHttpError(401, "You are not loggin. Please loggin")
     }
   } catch (error) {
     console.log("errorska", error)
     if (error.name === "JsonWebTokenError") {
       console.log("Invalid token", error)
       return next(createHttpError(401, "Invalid token"))
+      // return next(createHttpError(401, "You are not Loggin, please Loggin"))
     } else {
       console.log("Error in protect middleware", error)
       return next(error)
