@@ -9,7 +9,7 @@ const app = express()
 app.use(express.json())
 app.use(cors())
 
-app.use("/", (req, res) => {
+app.use("/api", (req, res) => {
   res.json({
     message: "Hello World!",
   })
