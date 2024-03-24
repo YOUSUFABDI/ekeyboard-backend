@@ -1,20 +1,18 @@
 import { RequestHandler } from "express"
 import createHttpError from "http-errors"
 import adminModel from "../models/adminModel"
+import productModel from "../models/productModel"
+import { generateToken } from "../lib/utils"
+import jwt, { JwtPayload } from "jsonwebtoken"
 import {
   CreateProductDT,
   LoginBodyDT,
   UpdateProductDT,
+  deleteProductParamsDT,
   signupBodyDT,
-  updateProductParams,
+  updateProductParamsDT,
 } from "lib/types"
-import productModel from "../models/productModel"
-import { generateToken } from "../lib/utils"
-import jwt, { JwtPayload } from "jsonwebtoken"
-
-interface CustomRequestWithUser extends Request {
-  user?: any
-}
+import userModel from "../models/userModel"
 
 const signup: RequestHandler<unknown, unknown, signupBodyDT, unknown> = async (
   req,
@@ -202,7 +200,7 @@ const createProduct: RequestHandler<
 }
 
 const updateProduct: RequestHandler<
-  updateProductParams,
+  updateProductParamsDT,
   unknown,
   UpdateProductDT,
   unknown
@@ -219,10 +217,6 @@ const updateProduct: RequestHandler<
   } = req.body
 
   try {
-    if (!productID) {
-      throw createHttpError(409, "Product ID is missing.")
-    }
-
     const product = await productModel.findById(productID)
     if (!product) {
       throw createHttpError(404, "Product not found.")
@@ -243,11 +237,66 @@ const updateProduct: RequestHandler<
   }
 }
 
-const deleteProduct: RequestHandler = (req, res, next) => {}
+const deleteProduct: RequestHandler<
+  deleteProductParamsDT,
+  unknown,
+  unknown,
+  unknown
+> = async (req, res, next) => {
+  const productID = req.params.productID
 
-const getProducts: RequestHandler = (req, res, next) => {}
+  try {
+    const product = await productModel.findById(productID)
+    if (!product) {
+      throw createHttpError(404, "Product not found.")
+    }
 
-const getOverviews: RequestHandler = (req, res, next) => {}
+    await product.deleteOne()
+
+    res.status(200).json({ message: "Success" })
+  } catch (error) {
+    next(error)
+  }
+}
+
+const getProducts: RequestHandler = async (req, res, next) => {
+  try {
+    const products = await productModel.find().exec()
+
+    res.status(200).json({ result: products.length, products })
+  } catch (error) {
+    next(error)
+  }
+}
+
+const getOverviews: RequestHandler = async (req, res, next) => {
+  try {
+    // get all the products available
+    const products = await productModel.find().exec()
+
+    // get total number of products available
+    const totalProducts = products.length
+
+    // get total number of users
+    const totalUsers = (await userModel.find().exec()).length
+
+    // get total number of users that are joined or registered last month
+    const lastMonthDate = new Date()
+    lastMonthDate.setMonth(lastMonthDate.getMonth() - 1)
+    const newCustomers = await userModel.find({
+      createdAt: { $gte: lastMonthDate },
+    })
+
+    res.status(200).json({
+      totalProducts,
+      totalUsers,
+      newCustomers,
+      products,
+    })
+  } catch (error) {
+    next(error)
+  }
+}
 
 export default {
   signup,

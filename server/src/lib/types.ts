@@ -30,6 +30,10 @@ export type UpdateProductDT = {
   productStock: number
 }
 
-export type updateProductParams = {
+export type updateProductParamsDT = {
+  productID: string
+}
+
+export type deleteProductParamsDT = {
   productID: string
 }

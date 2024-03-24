@@ -20,8 +20,8 @@ router.post("/signup", signup) // DONE✅
 router.get("/me", protect, getAuthenticatedAdmin) // DONE✅
 router.post("/create-product", protect, createProduct) // DONE✅
 router.patch("/update-product/:productID", protect, updateProduct) // DONE✅
-router.delete("/delete-product/:productID", protect, deleteProduct)
-router.get("/get-products", protect, getProducts)
+router.delete("/delete-product/:productID", protect, deleteProduct) // DONE✅
+router.get("/get-products", protect, getProducts) // DONE✅
 router.get("/get-overviews", protect, getOverviews)
 
 export default router
