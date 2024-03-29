@@ -26,6 +26,11 @@ const adminSchema = new Schema(
       type: String,
       required: true,
     },
+    adminPhoto: {
+      type: String,
+      default:
+        "https://cdn3d.iconscout.com/3d/premium/thumb/profile-5590850-4652486.png?f=webp",
+    },
   },
   { timestamps: true }
 )

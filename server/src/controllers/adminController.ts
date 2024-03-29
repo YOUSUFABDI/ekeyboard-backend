@@ -13,6 +13,7 @@ import {
   updateProductParamsDT,
 } from "lib/types"
 import userModel from "../models/userModel"
+import orderModel from "../models/orderModel"
 
 const signup: RequestHandler<unknown, unknown, signupBodyDT, unknown> = async (
   req,
@@ -287,9 +288,14 @@ const getOverviews: RequestHandler = async (req, res, next) => {
       createdAt: { $gte: lastMonthDate },
     })
 
+    // get all orders
+    const orders = await orderModel.find().exec()
+    const totalOrders = orders.length
+
     res.status(200).json({
-      totalProducts,
       totalUsers,
+      totalProducts,
+      totalOrders,
       newCustomers,
       products,
     })

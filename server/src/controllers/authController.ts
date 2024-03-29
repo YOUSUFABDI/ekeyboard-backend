@@ -5,6 +5,7 @@ import bcrypt from "bcrypt"
 import jwt, { JwtPayload } from "jsonwebtoken"
 import userModel from "../models/userModel"
 import { generateToken } from "../lib/utils"
+import { CustomRequestWithUser } from "lib/types"
 
 interface SignUpBody {
   fullName?: string
@@ -19,10 +20,6 @@ interface SignUpBody {
 interface LoginBody {
   username: string
   password: string
-}
-
-interface CustomRequestWithUser extends Request {
-  user?: any
 }
 
 const signUp: RequestHandler<unknown, unknown, SignUpBody, unknown> = async (

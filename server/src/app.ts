@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from "express"
 import cors from "cors"
 import authRouter from "./routes/authRoutes"
 import adminRouter from "./routes/adminRoutes"
+import orderRouter from "./routes/orderRoutes"
 import createHttpError, { isHttpError } from "http-errors"
 
 const app = express()
@@ -16,6 +17,7 @@ app.use("/api", (req, res) => {
 })
 app.use("/auth", authRouter)
 app.use("/admin", adminRouter)
+app.use("/orders", orderRouter)
 
 app.use((req, res, next) => {
   next(createHttpError(404, "Endpoint not found"))

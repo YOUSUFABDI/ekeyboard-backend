@@ -1,6 +1,12 @@
+import { Request } from "express"
+
 export type LoginBodyDT = {
   username: string
   password: string
+}
+
+export interface CustomRequestWithUser extends Request {
+  user?: any
 }
 
 export type signupBodyDT = {
