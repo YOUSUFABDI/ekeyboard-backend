@@ -14,6 +14,14 @@ import {
 } from "lib/types"
 import userModel from "../models/userModel"
 import orderModel from "../models/orderModel"
+import { v2 as cloudinary } from "cloudinary"
+
+// Initialize Cloudinary
+// cloudinary.config({
+//   cloud_name: "dwik9lulf",
+//   api_key: "466784638783261",
+//   api_secret: "aJCCYt81L5DftVyKIRcHLirR4h4",
+// })
 
 const signup: RequestHandler<unknown, unknown, signupBodyDT, unknown> = async (
   req,
@@ -157,7 +165,6 @@ const createProduct: RequestHandler<
     productPrice,
     productDescription,
     productImage,
-    productLikes,
     productStock,
   } = req.body
 
@@ -190,7 +197,6 @@ const createProduct: RequestHandler<
       price: productPrice,
       description: productDescription,
       image: productImage,
-      likes: productLikes,
       stock: productStock,
     })
     res.status(201).json(newProduct)

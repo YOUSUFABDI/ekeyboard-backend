@@ -4,7 +4,11 @@ const userSchema = new Schema(
   {
     fullName: { type: String, required: true },
     username: { type: String, required: true },
-    photo: { type: String, default: "default.jpj" },
+    photo: {
+      type: String,
+      default:
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6NYW3a3rRNPiE4LaF3IPYE3n23CFaNmHe8pvoPqyE9g&s",
+    },
     address: { type: String, required: true },
     phone: { type: String, required: true },
     age: { type: Number, required: true },

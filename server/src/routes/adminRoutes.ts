@@ -22,6 +22,6 @@ router.post("/create-product", protect, createProduct) // DONE✅
 router.patch("/update-product/:productID", protect, updateProduct) // DONE✅
 router.delete("/delete-product/:productID", protect, deleteProduct) // DONE✅
 router.get("/get-products", protect, getProducts) // DONE✅
-router.get("/get-overviews", protect, getOverviews)
+router.get("/get-overviews", protect, getOverviews) // DONE✅
 
 export default router
