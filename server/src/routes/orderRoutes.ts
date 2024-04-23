@@ -4,9 +4,10 @@ import authController from "../controllers/authController"
 
 const router = express.Router()
 
-const { makeOrder } = orderController
+const { makeOrder, getOrders } = orderController
 const { protect } = authController
 
 router.post("/make-order", protect, makeOrder)
+router.get("/get-orders", protect, getOrders)
 
 export default router

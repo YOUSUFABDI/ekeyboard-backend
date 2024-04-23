@@ -1,13 +1,8 @@
 import { RequestHandler } from "express"
-import { CustomRequestWithUser } from "lib/types"
+import { CustomRequestWithUser, MakeOrderBodyDT } from "lib/types"
 import orderModel from "../models/orderModel"
 import createHttpError from "http-errors"
 import productModel from "../models/productModel"
-
-type MakeOrderBodyDT = {
-  quantity: number
-  productID: string
-}
 
 const makeOrder: RequestHandler<
   unknown,
@@ -30,6 +25,10 @@ const makeOrder: RequestHandler<
       throw createHttpError(400, "Not enough stock")
     }
 
+    // update the product stock
+    product.stock -= quantity
+    await product.save()
+
     const order = await orderModel.create({
       user: authenticatedUserId,
       product: productID,
@@ -42,4 +41,31 @@ const makeOrder: RequestHandler<
   }
 }
 
-export default { makeOrder }
+const getOrders: RequestHandler<unknown, unknown, unknown, unknown> = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    // Populate user and product data for each order
+    const orders = await orderModel
+      .find()
+      .populate({
+        path: "user",
+        select: "-password",
+      })
+      .populate({
+        path: "product",
+        match: { _id: { $ne: null } },
+      })
+
+    const filteredOrders = orders.filter((order) => order.product !== null)
+
+    res.status(200).json(filteredOrders)
+  } catch (error) {
+    console.log(error)
+    next(error)
+  }
+}
+
+export default { makeOrder, getOrders }

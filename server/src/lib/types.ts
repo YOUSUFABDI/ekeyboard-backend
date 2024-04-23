@@ -43,3 +43,8 @@ export type updateProductParamsDT = {
 export type deleteProductParamsDT = {
   productID: string
 }
+
+export type MakeOrderBodyDT = {
+  quantity: number
+  productID: string
+}

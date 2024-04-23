@@ -124,7 +124,8 @@ const protect: RequestHandler<unknown, unknown, unknown, unknown> = async (
     console.log("errorska", error)
     if (error.name === "JsonWebTokenError") {
       console.log("Invalid token", error)
-      return next(createHttpError(401, "Invalid token"))
+      // return next(createHttpError(401, "Invalid token"))
+      return next(createHttpError(401, "You are not Loggin, please Loggin"))
     } else {
       console.log("Error in protect middleware", error)
       return next(error)
@@ -259,6 +260,12 @@ const deleteProduct: RequestHandler<
     }
 
     await product.deleteOne()
+    await orderModel.updateMany(
+      {
+        product: productID,
+      },
+      { $set: { product: null } }
+    )
 
     res.status(200).json({ message: "Success" })
   } catch (error) {
@@ -290,6 +297,7 @@ const getOverviews: RequestHandler = async (req, res, next) => {
     // get total number of users that are joined or registered last month
     const lastMonthDate = new Date()
     lastMonthDate.setMonth(lastMonthDate.getMonth() - 1)
+    lastMonthDate.setDate(1)
     const newCustomers = await userModel.find({
       createdAt: { $gte: lastMonthDate },
     })
