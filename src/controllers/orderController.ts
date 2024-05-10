@@ -1,5 +1,5 @@
 import { RequestHandler } from "express"
-import { CustomRequestWithUser, MakeOrderBodyDT } from "lib/types"
+import { CustomRequestWithUser, MakeOrderBodyDT } from "lib/types/types"
 import orderModel from "../models/orderModel"
 import createHttpError from "http-errors"
 import productModel from "../models/productModel"
@@ -61,7 +61,12 @@ const getOrders: RequestHandler<unknown, unknown, unknown, unknown> = async (
 
     const filteredOrders = orders.filter((order) => order.product !== null)
 
-    res.status(200).json(filteredOrders)
+    const allOrders =
+      filteredOrders && filteredOrders.length < 1
+        ? "There is no order yet"
+        : filteredOrders
+
+    res.status(200).json(allOrders)
   } catch (error) {
     console.log(error)
     next(error)

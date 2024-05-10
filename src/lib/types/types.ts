@@ -6,7 +6,10 @@ export type LoginBodyDT = {
 }
 
 export interface CustomRequestWithUser extends Request {
-  user?: any
+  user?: {
+    id: unknown
+    role: string
+  }
 }
 
 export type signupBodyDT = {

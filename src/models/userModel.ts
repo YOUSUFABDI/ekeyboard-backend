@@ -14,6 +14,11 @@ const userSchema = new Schema(
     age: { type: Number, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: 'user'
+    },
     active: { type: Boolean, default: true, select: false },
   },
   { timestamps: true }
