@@ -5,10 +5,11 @@ import {
   UpdateProductDT,
   deleteProductParamsDT,
   updateProductParamsDT,
-} from "lib/types/types"
+} from "../lib/types/product"
 import orderModel from "../models/orderModel"
 import productModel from "../models/productModel"
 import userModel from "../models/userModel"
+import cloudinary from "../lib/util/cloudinary"
 
 // Initialize Cloudinary
 // cloudinary.config({

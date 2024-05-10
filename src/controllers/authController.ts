@@ -1,28 +1,15 @@
-import { RequestHandler, Request } from "express"
-import createHttpError from "http-errors"
-import UserModel from "../models/userModel"
 import bcrypt from "bcrypt"
-import jwt, { JwtPayload } from "jsonwebtoken"
-import userModel from "../models/userModel"
-import { generateToken } from "../lib/utils"
-import { CustomRequestWithUser } from "lib/types/types"
+import { RequestHandler } from "express"
+import createHttpError from "http-errors"
+import { generateToken } from "../lib/util/generateToken"
+import { default as UserModel, default as userModel } from "../models/userModel"
+import {
+  SignUpBodyDT,
+  LoginBodyDT,
+  CustomRequestWithUser,
+} from "../lib/types/auth"
 
-interface SignUpBody {
-  fullName?: string
-  email?: string
-  phone?: string
-  address?: string
-  age?: number
-  username?: string
-  password?: string
-}
-
-interface LoginBody {
-  username: string
-  password: string
-}
-
-const signUp: RequestHandler<unknown, unknown, SignUpBody, unknown> = async (
+const signUp: RequestHandler<unknown, unknown, SignUpBodyDT, unknown> = async (
   req,
   res,
   next
@@ -96,7 +83,7 @@ const signUp: RequestHandler<unknown, unknown, SignUpBody, unknown> = async (
   }
 }
 
-const login: RequestHandler<unknown, unknown, LoginBody, unknown> = async (
+const login: RequestHandler<unknown, unknown, LoginBodyDT, unknown> = async (
   req,
   res,
   next
@@ -130,53 +117,6 @@ const login: RequestHandler<unknown, unknown, LoginBody, unknown> = async (
   }
 }
 
-const protect: RequestHandler<unknown, unknown, unknown, unknown> = async (
-  req,
-  res,
-  next
-) => {
-  try {
-    let token
-
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
-    ) {
-      // Get token from header
-      token = req.headers.authorization.split(" ")[1]
-
-      if (!token) {
-        throw createHttpError(401, "No token provided")
-      }
-
-      // Verify token
-      const decoded = jwt.verify(token, process.env.SECRET_KEY) as JwtPayload
-
-      // Get user from the token
-      const user = await UserModel.findById(decoded.id).select("-password")
-
-      // Assign user to request object
-      if (user) {
-        ;(req as CustomRequestWithUser).user = { id: user._id, role: user.role }
-      }
-
-      return next()
-    } else {
-      throw createHttpError(401, "You are not loggin. Please loggin")
-    }
-  } catch (error) {
-    console.log("errorska", error)
-    if (error.name === "JsonWebTokenError") {
-      console.log("Invalid token", error)
-      return next(createHttpError(401, "Invalid token"))
-      // return next(createHttpError(401, "You are not Loggin, please Loggin"))
-    } else {
-      console.log("Error in protect middleware", error)
-      return next(error)
-    }
-  }
-}
-
 const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
   try {
     const authenticatedUserId = (req as CustomRequestWithUser).user?.id
@@ -199,57 +139,4 @@ const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
   }
 }
 
-const restrictTo = (
-  ...roles: string[]
-): RequestHandler<unknown, unknown, unknown, unknown> => {
-  return async (req, res, next) => {
-    try {
-      let token
-
-      if (
-        req.headers.authorization &&
-        req.headers.authorization.startsWith("Bearer")
-      ) {
-        // Get token from header
-        token = req.headers.authorization.split(" ")[1]
-
-        if (!token) {
-          throw createHttpError(401, "No token provided")
-        }
-
-        // Verify token
-        const decoded = jwt.verify(token, process.env.SECRET_KEY) as JwtPayload
-
-        // Get user from the token
-        const user = await UserModel.findById(decoded.id).select("-password")
-
-        // Assign user to request object
-        if (user) {
-          ;(req as CustomRequestWithUser).user = {
-            id: user._id,
-            role: user.role,
-          }
-        }
-
-        if (!roles.includes(user.role)) {
-          return next(
-            createHttpError(
-              403,
-              "You do not have permission to perform this action"
-            )
-          )
-        }
-
-        next()
-
-        // return next()
-      } else {
-        throw createHttpError(401, "You are not loggin. Please loggin")
-      }
-    } catch (error) {
-      next(error)
-    }
-  }
-}
-
-export default { signUp, login, getAuthenticatedUser, protect, restrictTo }
+export default { signUp, login, getAuthenticatedUser }

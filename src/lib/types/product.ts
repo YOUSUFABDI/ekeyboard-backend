@@ -1,26 +1,3 @@
-import { Request } from "express"
-
-export type LoginBodyDT = {
-  username: string
-  password: string
-}
-
-export interface CustomRequestWithUser extends Request {
-  user?: {
-    id: unknown
-    role: string
-  }
-}
-
-export type signupBodyDT = {
-  fullName?: string
-  email?: string
-  phone?: string
-  address?: string
-  username?: string
-  password?: string
-}
-
 export type CreateProductDT = {
   productName: string
   productPrice: number
@@ -44,10 +21,5 @@ export type updateProductParamsDT = {
 }
 
 export type deleteProductParamsDT = {
-  productID: string
-}
-
-export type MakeOrderBodyDT = {
-  quantity: number
   productID: string
 }

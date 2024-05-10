@@ -1,10 +1,11 @@
-import authController from "../controllers/authController"
 import express from "express"
+import authController from "../controllers/authController"
+import authMiddleware from "../middlewares/authMiddleware"
 
 const router = express.Router()
 
-const { signUp, login, getAuthenticatedUser, protect, restrictTo } =
-  authController
+const { restrictTo, protect } = authMiddleware
+const { signUp, login, getAuthenticatedUser } = authController
 
 router.post("/", login)
 router.post("/signup", signUp)

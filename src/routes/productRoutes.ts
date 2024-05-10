@@ -1,10 +1,10 @@
 import express from "express"
 import productController from "../controllers/productController"
-import authController from "../controllers/authController"
+import authMiddleware from "../middlewares/authMiddleware"
 
 const router = express.Router()
 
-const { restrictTo, protect } = authController
+const { restrictTo, protect } = authMiddleware
 const {
   createProduct,
   updateProduct,

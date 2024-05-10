@@ -1,5 +1,6 @@
 import { RequestHandler } from "express"
-import { CustomRequestWithUser, MakeOrderBodyDT } from "lib/types/types"
+import { MakeOrderBodyDT } from "../lib/types/order"
+import { CustomRequestWithUser } from "../lib/types/auth"
 import orderModel from "../models/orderModel"
 import createHttpError from "http-errors"
 import productModel from "../models/productModel"
