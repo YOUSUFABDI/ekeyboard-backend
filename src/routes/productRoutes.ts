@@ -13,14 +13,12 @@ const {
   getProducts,
 } = productController
 
-router.get("/get-products", protect, getProducts)
+router.use(protect)
 
-router.use(restrictTo("admin"))
-
-router.post("/create-product", protect, createProduct)
-router.patch("/update-product/:productID", protect, updateProduct)
-router.delete("/delete-product/:productID", protect, deleteProduct)
-router.get("/get-products", protect, getProducts)
-router.get("/get-overviews", protect, getOverviews)
+router.post("/create-product", restrictTo("admin"), createProduct)
+router.patch("/update-product/:productID", restrictTo("admin"), updateProduct)
+router.delete("/delete-product/:productID", restrictTo("admin"), deleteProduct)
+router.get("/get-products", getProducts)
+router.get("/get-overviews", restrictTo("admin"), getOverviews)
 
 export default router

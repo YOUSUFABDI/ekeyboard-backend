@@ -7,7 +7,9 @@ const router = express.Router()
 const { protect } = authMiddleware
 const { makeOrder, getOrders } = orderController
 
-router.post("/make-order", protect, makeOrder)
-router.get("/get-orders", protect, getOrders)
+router.use(protect)
+
+router.post("/make-order", makeOrder)
+router.get("/get-orders", getOrders)
 
 export default router
