@@ -11,7 +11,7 @@ export type UpdateProductDT = {
   productName: string
   productPrice: number
   productDescription: string
-  productImage: string
+  productImage: string[]
   productLikes: number
   productStock: number
 }

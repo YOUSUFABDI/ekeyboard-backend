@@ -11,13 +11,6 @@ import productModel from "../models/productModel"
 import userModel from "../models/userModel"
 import cloudinary from "../lib/util/cloudinary"
 
-// Initialize Cloudinary
-// cloudinary.config({
-//   cloud_name: "dwik9lulf",
-//   api_key: "466784638783261",
-//   api_secret: "aJCCYt81L5DftVyKIRcHLirR4h4",
-// })
-
 const createProduct: RequestHandler<
   unknown,
   unknown,
@@ -46,7 +39,6 @@ const createProduct: RequestHandler<
   }
 
   try {
-    // check if product already exists
     const product = await productModel
       .findOne({
         name: productName,
@@ -56,11 +48,36 @@ const createProduct: RequestHandler<
       throw createHttpError(409, "Product already exists.")
     }
 
+    let imageUrls: string[] = [
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaBqXPJxDAvLfz-d0uNwJtxUSGKexAZfWzkknNlUdU0A&s",
+    ]
+
+    if (Array.isArray(productImage)) {
+      imageUrls = await Promise.all(
+        productImage.map(async (image) => {
+          if (typeof image === "string") {
+            const uploadResult = await cloudinary.uploader.upload(image, {
+              folder: "Ekeyboard",
+              use_filename: true,
+            })
+            return uploadResult.secure_url
+          }
+          return imageUrls[0]
+        })
+      )
+    } else if (typeof productImage === "string") {
+      const uploadResult = await cloudinary.uploader.upload(productImage, {
+        folder: "Ekeyboard",
+        use_filename: true,
+      })
+      imageUrls = [uploadResult.secure_url]
+    }
+
     const newProduct = await productModel.create({
       name: productName,
       price: productPrice,
       description: productDescription,
-      image: productImage,
+      images: imageUrls,
       stock: productStock,
     })
     res.status(201).json(newProduct)
@@ -93,10 +110,43 @@ const updateProduct: RequestHandler<
       throw createHttpError(404, "Product not found.")
     }
 
+    const currentImageUrls = product.images
+    const deletePromises = currentImageUrls.map(async (url) => {
+      const publicID = url.split("/").pop()?.split(".")[0]
+      if (publicID) {
+        await cloudinary.uploader.destroy(`Ekeyboard/${publicID}`)
+      }
+    })
+    await Promise.all(deletePromises)
+
+    let imageUrls: string[] = []
+    if (Array.isArray(productImage)) {
+      imageUrls = await Promise.all(
+        productImage.map(async (image) => {
+          if (typeof image === "string") {
+            const uploadResult = await cloudinary.uploader.upload(image, {
+              folder: "Ekeyboard",
+              use_filename: true,
+            })
+            return uploadResult.secure_url
+          }
+          return ""
+        })
+      )
+    } else if (typeof productImage === "string") {
+      const uploadResult = await cloudinary.uploader.upload(productImage, {
+        folder: "Ekeyboard",
+        use_filename: true,
+      })
+      imageUrls = [uploadResult.secure_url]
+    }
+
+    imageUrls = imageUrls.filter((url) => url)
+
     product.name = productName
     product.price = productPrice
     product.description = productDescription
-    product.image = productImage
+    product.images = imageUrls
     product.likes = productLikes
     product.stock = productStock
 
@@ -121,6 +171,14 @@ const deleteProduct: RequestHandler<
     if (!product) {
       throw createHttpError(404, "Product not found.")
     }
+
+    const deletePromises = product.images.map(async (url) => {
+      const publicID = url.split("/")?.pop()?.split(".")[0]
+      if (publicID) {
+        await cloudinary.uploader.destroy(`Ekeyboard/${publicID}`)
+      }
+    })
+    await Promise.all(deletePromises)
 
     await product.deleteOne()
     await orderModel.updateMany(

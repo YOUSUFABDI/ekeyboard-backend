@@ -1,4 +1,4 @@
-import { InferSchemaType, Schema, model } from "mongoose"
+import mongoose, { InferSchemaType, Schema, model } from "mongoose"
 
 const productSchema = new Schema(
   {
@@ -11,9 +11,13 @@ const productSchema = new Schema(
     description: {
       type: String,
     },
-    image: {
-      type: String,
-    },
+    images: [
+      {
+        type: String,
+        default:
+          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaBqXPJxDAvLfz-d0uNwJtxUSGKexAZfWzkknNlUdU0A&s",
+      },
+    ],
     likes: {
       type: Number,
       default: 0,
