@@ -10,6 +10,11 @@ export type SignUpBodyDT = {
   password?: string
 }
 
+export type VerifyOtpDT = {
+  email: string
+  otp: number
+}
+
 export type LoginBodyDT = {
   username: string
   password: string

@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  fullName  String
+  username  String   @unique
+  photo     String   @default("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6NYW3a3rRNPiE4LaF3IPYE3n23CFaNmHe8pvoPqyE9g&s")
+  address   String
+  phone     String
+  age       Int
+  email     String   @unique
+  password  String
+  role      String   @default("user")
+  active    Boolean  @default(true)
+  createdDT DateTime @default(now())
+  orders    Order[]
+  OTP       OTP[]
+}
+
+model OTP {
+  id        Int      @id @default(autoincrement())
+  otp       Int
+  status    String
+  userId    Int
+  createdDT DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "UserOTP Relationship")
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String
+  price       Float
+  description String
+  likes       Int       @default(0)
+  stock       Int
+  createdDT   DateTime  @default(now())
+  orders      Order[]
+  images      ProductImages[]
+}
+
+model ProductImages {
+  id       Int     @id @default(autoincrement())
+  productId Int
+  imageUrl String
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade, map: "ProductImages Relationship")
+}
+
+model Order {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  quantity  Int
+  status    String   @default("pending")
+  createdDT DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id] ,onDelete: Cascade, map: "User Relationship")
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade, map: "Order Relationship")
+}
+

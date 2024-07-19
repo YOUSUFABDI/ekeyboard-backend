@@ -1,8 +1,8 @@
 import { RequestHandler } from "express"
-import createHttpError from "http-errors"
 import jwt, { JwtPayload } from "jsonwebtoken"
+import prisma from "../../prisma/client"
 import { CustomRequestWithUser } from "../lib/types/auth"
-import { default as UserModel } from "../models/userModel"
+import createHttpError from "http-errors"
 
 const protect: RequestHandler<unknown, unknown, unknown, unknown> = async (
   req,
@@ -16,22 +16,19 @@ const protect: RequestHandler<unknown, unknown, unknown, unknown> = async (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer")
     ) {
-      // Get token from header
       token = req.headers.authorization.split(" ")[1]
-
       if (!token) {
-        throw createHttpError(401, "No token provided")
+        throw createHttpError("Token is not provided")
       }
 
-      // Verify token
       const decoded = jwt.verify(token, process.env.SECRET_KEY) as JwtPayload
 
-      // Get user from the token
-      const user = await UserModel.findById(decoded.id).select("-password")
-
-      // Assign user to request object
+      const user = await prisma.user.findFirst(decoded.id)
       if (user) {
-        ;(req as CustomRequestWithUser).user = { id: user._id, role: user.role }
+        ;(req as CustomRequestWithUser).user = {
+          id: user.id,
+          role: user.role,
+        }
       }
 
       return next()
@@ -62,23 +59,17 @@ const restrictTo = (
         req.headers.authorization &&
         req.headers.authorization.startsWith("Bearer")
       ) {
-        // Get token from header
         token = req.headers.authorization.split(" ")[1]
-
         if (!token) {
-          throw createHttpError(401, "No token provided")
+          throw createHttpError("Token is not provided")
         }
 
-        // Verify token
         const decoded = jwt.verify(token, process.env.SECRET_KEY) as JwtPayload
 
-        // Get user from the token
-        const user = await UserModel.findById(decoded.id).select("-password")
-
-        // Assign user to request object
+        const user = await prisma.user.findFirst(decoded.id)
         if (user) {
           ;(req as CustomRequestWithUser).user = {
-            id: user._id,
+            id: user.id,
             role: user.role,
           }
         }
@@ -93,8 +84,6 @@ const restrictTo = (
         }
 
         next()
-
-        // return next()
       } else {
         throw createHttpError(401, "You are not loggin. Please loggin")
       }

@@ -5,10 +5,11 @@ import authMiddleware from "../middlewares/authMiddleware"
 const router = express.Router()
 
 const { restrictTo, protect } = authMiddleware
-const { signUp, login, getAuthenticatedUser } = authController
+const { signUp, verifyOtpCode, login, getAuthenticatedUser } = authController
 
 router.post("/", login)
 router.post("/signup", signUp)
+router.post("/verfiy-otp", verifyOtpCode)
 router.get("/me", protect, getAuthenticatedUser)
 
 router.use(restrictTo("admin"))

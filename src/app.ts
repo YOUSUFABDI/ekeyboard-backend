@@ -1,10 +1,13 @@
-import express, { NextFunction, Request, Response } from "express"
 import cors from "cors"
-import authRouter from "./routes/authRoutes"
-import productRouter from "./routes/productRoutes"
-import orderRouter from "./routes/orderRoutes"
+import express, { NextFunction, Request, Response } from "express"
 import createHttpError, { isHttpError } from "http-errors"
-import { rateLimit } from "express-rate-limit"
+import authRouter from "./routes/authRoutes"
+import orderRouter from "./routes/orderRoutes"
+import productRouter from "./routes/productRoutes"
+import dotenv from "dotenv"
+import resHandler from "./middlewares/resMiddleware"
+
+dotenv.config()
 
 const app = express()
 
@@ -12,15 +15,11 @@ app.use(express.json())
 app.use(cors())
 app.options("*", cors())
 
-const limiter = rateLimit({
-  max: 100,
-  windowMs: 60 * 60 * 1000,
-  message: "Too many requests from this IP, please try again in an hour!",
-})
-app.use("/api", limiter)
+// res handler middleware
+app.use(resHandler)
 
-app.use("/api/test", (req, res) => {
-  res.status(200).json({ message: "Hello World!" })
+app.get("/", (req, res) => {
+  res.success("API is running", 200)
 })
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/products", productRouter)
@@ -31,16 +30,13 @@ app.use((req, res, next) => {
 })
 
 app.use((error: unknown, req: Request, res: Response, next: NextFunction) => {
-  let errorMessage = "An unknown error occurred"
-  let statusCode = 500
   console.log(error)
 
   if (isHttpError(error)) {
-    statusCode = error.status
-    errorMessage = error.message
+    res.error(error.message, error.statusCode)
+  } else {
+    res.error("An unknown error occurred", 400)
   }
-
-  res.status(statusCode).json({ error: errorMessage })
 })
 
 export default app
