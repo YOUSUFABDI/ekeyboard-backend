@@ -43,11 +43,12 @@ model Product {
   likes       Int             @default(0)
   stock       Int
   createdDT   DateTime        @default(now())
+  categoryId  Int
   orders      Order[]
+  category    ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade, map: "Category Relationship")
   images      ProductImages[]
 
-  category   ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade, map: "Category Relationship")
-  categoryId Int
+  @@index([categoryId], map: "Category Relationship")
 }
 
 model ProductCategory {

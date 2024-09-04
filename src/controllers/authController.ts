@@ -198,7 +198,6 @@ const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
         photo: authenticatedUser.photo,
         address: authenticatedUser.address,
         age: authenticatedUser.age,
-        photo: authenticatedUser.photo 
         createdDT: authenticatedUser.createdDT,
       },
     })
