@@ -24,6 +24,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@types/multer": "^1.4.12",
     "bcrypt": "^5.1.1",
     "cloudinary": "^2.1.0",
     "cors": "^2.8.5",

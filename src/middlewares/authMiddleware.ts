@@ -23,7 +23,9 @@ const protect: RequestHandler<unknown, unknown, unknown, unknown> = async (
 
       const decoded = jwt.verify(token, process.env.SECRET_KEY) as JwtPayload
 
-      const user = await prisma.user.findFirst(decoded.id)
+      const user = await prisma.user.findFirst({
+        where: { id: decoded.id },
+      })
       if (user) {
         ;(req as CustomRequestWithUser).user = {
           id: user.id,
@@ -66,7 +68,9 @@ const restrictTo = (
 
         const decoded = jwt.verify(token, process.env.SECRET_KEY) as JwtPayload
 
-        const user = await prisma.user.findFirst(decoded.id)
+        const user = await prisma.user.findFirst({
+          where: { id: decoded.id },
+        })
         if (user) {
           ;(req as CustomRequestWithUser).user = {
             id: user.id,

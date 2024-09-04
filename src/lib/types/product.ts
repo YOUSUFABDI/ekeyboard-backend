@@ -2,9 +2,10 @@ export type CreateProductDT = {
   productName: string
   productPrice: number
   productDescription: string
-  productImage: string
+  productImage: Express.Multer.File[]
   productLikes: number
   productStock: number
+  categoryId: number
 }
 
 export type UpdateProductDT = {
@@ -22,4 +23,8 @@ export type updateProductParamsDT = {
 
 export type deleteProductParamsDT = {
   productID: string
+}
+
+export type CreateCategoryDT = {
+  name: string
 }

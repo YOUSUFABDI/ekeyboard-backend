@@ -6,6 +6,7 @@ const router = express.Router()
 
 const { restrictTo, protect } = authMiddleware
 const {
+  createCategory,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -15,6 +16,7 @@ const {
 
 router.use(protect)
 
+router.post("/create-category", restrictTo("admin"), createCategory)
 router.post("/create-product", restrictTo("admin"), createProduct)
 router.patch("/update-product/:productID", restrictTo("admin"), updateProduct)
 router.delete("/delete-product/:productID", restrictTo("admin"), deleteProduct)

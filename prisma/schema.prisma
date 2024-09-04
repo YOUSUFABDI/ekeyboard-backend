@@ -20,8 +20,8 @@ model User {
   role      String   @default("user")
   active    Boolean  @default(true)
   createdDT DateTime @default(now())
-  orders    Order[]
   OTP       OTP[]
+  orders    Order[]
 }
 
 model OTP {
@@ -30,28 +30,39 @@ model OTP {
   status    String
   userId    Int
   createdDT DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "UserOTP Relationship")
 
-  user      User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "UserOTP Relationship")
+  @@index([userId], map: "UserOTP Relationship")
 }
 
 model Product {
-  id          Int       @id @default(autoincrement())
+  id          Int             @id @default(autoincrement())
   name        String
   price       Float
   description String
-  likes       Int       @default(0)
+  likes       Int             @default(0)
   stock       Int
-  createdDT   DateTime  @default(now())
+  createdDT   DateTime        @default(now())
   orders      Order[]
   images      ProductImages[]
+
+  category   ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade, map: "Category Relationship")
+  categoryId Int
+}
+
+model ProductCategory {
+  id      Int       @id @default(autoincrement())
+  name    String
+  product Product[]
 }
 
 model ProductImages {
-  id       Int     @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   productId Int
-  imageUrl String
+  imageUrl  String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade, map: "ProductImages Relationship")
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade, map: "ProductImages Relationship")
+  @@index([productId], map: "ProductImages Relationship")
 }
 
 model Order {
@@ -61,8 +72,9 @@ model Order {
   quantity  Int
   status    String   @default("pending")
   createdDT DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade, map: "Order Relationship")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "User Relationship")
 
-  user    User    @relation(fields: [userId], references: [id] ,onDelete: Cascade, map: "User Relationship")
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade, map: "Order Relationship")
+  @@index([productId], map: "Order Relationship")
+  @@index([userId], map: "User Relationship")
 }
-
