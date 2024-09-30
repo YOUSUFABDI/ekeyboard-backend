@@ -1,6 +1,6 @@
 import { RequestHandler } from "express"
-import { MakeOrderBodyDT } from "../lib/types/order"
-import { CustomRequestWithUser } from "../lib/types/auth"
+import { MakeOrderBodyDT } from "../types/order"
+import { CustomRequestWithUser } from "../types/auth"
 
 const makeOrder: RequestHandler<
   unknown,

@@ -4,6 +4,7 @@ import createHttpError, { isHttpError } from "http-errors"
 import authRouter from "./routes/authRoutes"
 import orderRouter from "./routes/orderRoutes"
 import productRouter from "./routes/productRoutes"
+import categoryRouter from "./routes/categoryRouter"
 import dotenv from "dotenv"
 import resHandler from "./middlewares/resMiddleware"
 
@@ -19,11 +20,12 @@ app.options("*", cors())
 app.use(resHandler)
 
 app.get("/", (req, res) => {
-  res.success("API is running", 200)
+  res.success("API is up and running", 200)
 })
-app.use("/api/v1/auth", authRouter)
-app.use("/api/v1/products", productRouter)
-app.use("/api/v1/orders", orderRouter)
+app.use("/api/auth", authRouter)
+app.use("/api/product", productRouter)
+app.use("/api/category", categoryRouter)
+app.use("/api/orders", orderRouter)
 
 app.use((req, res, next) => {
   next(createHttpError(404, "Endpoint not found"))

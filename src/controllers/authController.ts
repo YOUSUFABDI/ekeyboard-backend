@@ -7,12 +7,12 @@ import {
   UdateUserDT,
   UpdatePasswordDT,
   VerifyOtpDT,
-} from "../lib/types/auth"
+} from "../types/auth"
 import createHttpError from "http-errors"
 import bcrypt from "bcrypt"
-import { generateToken } from "../lib/util/generateToken"
-import { generateOTP } from "../lib/util/generateOTP"
-import { sendOtpEmail } from "../lib/util/sendOtpEmail"
+import { generateToken } from "../util/generateToken"
+import { generateOTP } from "../util/generateOTP"
+import { sendOtpEmail } from "../util/sendOtpEmail"
 
 const signUp: RequestHandler<unknown, unknown, SignUpBodyDT, unknown> = async (
   req,

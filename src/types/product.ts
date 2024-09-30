@@ -18,11 +18,11 @@ export type UpdateProductDT = {
 }
 
 export type updateProductParamsDT = {
-  productID: string
+  productId: string
 }
 
-export type deleteProductParamsDT = {
-  productID: string
+export type removeProductParamsDT = {
+  productId: string
 }
 
 export type CreateCategoryDT = {

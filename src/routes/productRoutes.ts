@@ -5,22 +5,28 @@ import authMiddleware from "../middlewares/authMiddleware"
 const router = express.Router()
 
 const { restrictTo, protect } = authMiddleware
+
 const {
-  createCategory,
-  createProduct,
-  updateProduct,
-  deleteProduct,
-  getOverviews,
-  getProducts,
+  findAll,
+  findOne,
+  create,
+  update,
+  remove,
+
+  Overview,
 } = productController
 
 router.use(protect)
 
-router.post("/create-category", restrictTo("admin"), createCategory)
-router.post("/create-product", restrictTo("admin"), createProduct)
-router.patch("/update-product/:productID", restrictTo("admin"), updateProduct)
-router.delete("/delete-product/:productID", restrictTo("admin"), deleteProduct)
-router.get("/get-products", getProducts)
-router.get("/get-overviews", restrictTo("admin"), getOverviews)
+router.get("/", findAll)
+router.get("/:productId", findOne)
+
+router.use(restrictTo("admin"))
+
+router.post("/create", create)
+router.patch("/update/:productId", update)
+router.delete("/remove/:productId", remove)
+
+router.get("/get-overviews", Overview)
 
 export default router

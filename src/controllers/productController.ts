@@ -1,40 +1,58 @@
 import { RequestHandler } from "express"
+import createHttpError from "http-errors"
+import prisma from "../../prisma/client"
 import {
-  CreateCategoryDT,
   CreateProductDT,
   UpdateProductDT,
-  deleteProductParamsDT,
+  removeProductParamsDT,
   updateProductParamsDT,
-} from "../lib/types/product"
-import prisma from "../../prisma/client"
-import createHttpError from "http-errors"
-import cloudinary from "../lib/util/cloudinary"
+} from "../types/product"
+import cloudinary from "../util/cloudinary"
 
-const createCategory: RequestHandler<
-  unknown,
-  unknown,
-  CreateCategoryDT,
-  unknown
-> = async (req, res, next) => {
+const findAll: RequestHandler = async (req, res, next) => {
   try {
-    const { name } = req.body
-    if (!name) {
-      throw createHttpError(400, "name is required")
-    }
-
-    const category = await prisma.productCategory.create({
-      data: {
-        name,
+    const products = await prisma.product.findMany({
+      include: {
+        images: true,
+        category: true,
       },
     })
-
-    res.success("Product created successfully", category)
+    res.success("", products)
   } catch (error) {
     next(error)
   }
 }
 
-const createProduct: RequestHandler<
+const findOne: RequestHandler<
+  { productId: number },
+  unknown,
+  unknown,
+  unknown
+> = async (req, res, next) => {
+  try {
+    const { productId } = req.params
+    if (!productId) {
+      throw createHttpError(404, "ProductId is required")
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id: Number(productId) },
+      include: {
+        images: true,
+        category: true,
+      },
+    })
+    if (!product) {
+      throw createHttpError(404, "Product not found")
+    }
+
+    res.success("", product)
+  } catch (error) {
+    next(error)
+  }
+}
+
+const create: RequestHandler<
   unknown,
   unknown,
   CreateProductDT,
@@ -53,10 +71,9 @@ const createProduct: RequestHandler<
     if (
       !productName ||
       !productDescription ||
-      !productImage ||
-      !productLikes ||
       !productPrice ||
       !productStock ||
+      !productImage ||
       !categoryId
     ) {
       throw createHttpError(400, "All fields are required")
@@ -91,36 +108,43 @@ const createProduct: RequestHandler<
   }
 }
 
-const updateProduct: RequestHandler<
+const update: RequestHandler<
   updateProductParamsDT,
   unknown,
   UpdateProductDT,
   unknown
 > = async (req, res, next) => {}
 
-const deleteProduct: RequestHandler<
-  deleteProductParamsDT,
+const remove: RequestHandler<
+  removeProductParamsDT,
   unknown,
   unknown,
   unknown
-> = async (req, res, next) => {}
-
-const getProducts: RequestHandler = async (req, res, next) => {
+> = async (req, res, next) => {
   try {
-    const products = await prisma.product.findMany()
-    res.success("", products)
+    const { productId } = req.params
+    if (!productId) {
+      throw createHttpError(404, "ProductId is required")
+    }
+
+    await prisma.product.delete({
+      where: { id: Number(productId) },
+    })
+
+    res.success("Product deleted successfully")
   } catch (error) {
     next(error)
   }
 }
 
-const getOverviews: RequestHandler = async (req, res, next) => {}
+const Overview: RequestHandler = async (req, res, next) => {}
 
 export default {
-  createCategory,
-  createProduct,
-  updateProduct,
-  deleteProduct,
-  getProducts,
-  getOverviews,
+  create,
+  update,
+  remove,
+  findAll,
+  findOne,
+
+  Overview,
 }

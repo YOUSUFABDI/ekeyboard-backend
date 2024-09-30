@@ -1,7 +1,7 @@
 import { RequestHandler } from "express"
 import jwt, { JwtPayload } from "jsonwebtoken"
 import prisma from "../../prisma/client"
-import { CustomRequestWithUser } from "../lib/types/auth"
+import { CustomRequestWithUser } from "../types/auth"
 import createHttpError from "http-errors"
 
 const protect: RequestHandler<unknown, unknown, unknown, unknown> = async (
