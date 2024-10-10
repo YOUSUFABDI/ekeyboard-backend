@@ -64,7 +64,7 @@ const create: RequestHandler<
       productPrice,
       productDescription,
       productImage,
-      productLikes,
+      // productLikes,
       productStock,
       categoryId,
     } = req.body
@@ -73,7 +73,7 @@ const create: RequestHandler<
       !productDescription ||
       !productPrice ||
       !productStock ||
-      !productImage ||
+      // !productImage ||
       !categoryId
     ) {
       throw createHttpError(400, "All fields are required")
@@ -91,7 +91,7 @@ const create: RequestHandler<
         name: productName,
         price: productPrice,
         description: productDescription,
-        likes: productLikes,
+        likes: 0,
         stock: productStock,
         category: {
           connect: { id: categoryId },
