@@ -13,13 +13,15 @@ dotenv.config();
 const app = express();
 
 app.use(express.json());
+app.use(cors());
+app.options("*", cors());
 app.use(
   cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-app.options("*", cors());
 
 // res handler middleware
 app.use(resHandler);
