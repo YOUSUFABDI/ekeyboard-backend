@@ -12,6 +12,8 @@ dotenv.config();
 
 const app = express();
 
+// Set limit to 4GB
+app.use(express.json({ limit: "4000mb" }));
 app.use(express.json());
 app.use(cors());
 app.options("*", cors());

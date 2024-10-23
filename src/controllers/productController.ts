@@ -67,6 +67,7 @@ const create: RequestHandler<
       productStock,
       categoryId,
     } = req.body;
+
     if (
       !productName ||
       !productDescription ||
@@ -78,10 +79,23 @@ const create: RequestHandler<
       throw createHttpError(400, "All fields are required");
     }
 
+    // Check if images are URLs or base64 and upload accordingly
     const uploadedImages = await Promise.all(
       productImage.map(async (image) => {
-        const result = await cloudinary.uploader.upload(image);
-        return { imageUrl: result.secure_url };
+        if (image.startsWith("http")) {
+          // Handle as URL
+          const result = await cloudinary.uploader.upload(image, {
+            // You can specify more options here if needed
+          });
+          return { imageUrl: result.secure_url };
+        } else {
+          // Handle as base64 data
+          const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+          const result = await cloudinary.uploader.upload(
+            `data:image/png;base64,${base64Data}`
+          );
+          return { imageUrl: result.secure_url };
+        }
       })
     );
 

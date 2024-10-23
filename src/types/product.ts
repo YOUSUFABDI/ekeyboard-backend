@@ -2,7 +2,7 @@ export type CreateProductDT = {
   productName: string;
   productPrice: number;
   productDescription: string;
-  productImage: Express.Multer.File[];
+  productImage: string[];
   productStock: number;
   categoryId: number;
 };
