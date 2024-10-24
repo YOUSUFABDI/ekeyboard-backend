@@ -14,6 +14,7 @@ export type UpdateProductDT = {
   productImage: string[];
   productLikes: number;
   productStock: number;
+  categoryId: number;
 };
 
 export type updateProductParamsDT = {

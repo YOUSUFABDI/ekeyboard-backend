@@ -126,7 +126,90 @@ const update: RequestHandler<
   unknown,
   UpdateProductDT,
   unknown
-> = async (req, res, next) => {};
+> = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+    if (!productId) {
+      throw createHttpError(400, "Product ID is required.");
+    }
+
+    const {
+      productName,
+      productPrice,
+      productDescription,
+      productImage,
+      productStock,
+      categoryId,
+    } = req.body;
+
+    // Validate all required fields
+    if (
+      !productName ||
+      !productDescription ||
+      !productPrice ||
+      productStock === undefined || // Allow 0 stock
+      !productImage || // Assuming this is an array of strings
+      !categoryId
+    ) {
+      throw createHttpError(400, "All fields are required");
+    }
+
+    // Fetch the existing product with images
+    const existingProduct = await prisma.product.findUnique({
+      where: { id: Number(productId) },
+      include: { images: true }, // Include the images relation
+    });
+
+    if (!existingProduct) {
+      throw createHttpError(404, "Product not found.");
+    }
+
+    // If images are being updated, handle Cloudinary operations
+    if (existingProduct.images && existingProduct.images.length > 0) {
+      // Loop through existing images and delete from Cloudinary
+      for (const oldImage of existingProduct.images) {
+        // Assume oldImage has a public_id to delete
+        await cloudinary.uploader.destroy(oldImage.id); // Adjust this line based on your structure
+      }
+    }
+
+    // Upload new images to Cloudinary
+    const uploadedImages = await Promise.all(
+      productImage.map(async (imageUrl: string) => {
+        const result = await cloudinary.uploader.upload(imageUrl);
+        return {
+          productId: Number(productId), // Associate with the current product
+          imageUrl: result.secure_url, // Save URL of the uploaded image
+        };
+      })
+    );
+
+    // Update product details in the database
+    const updatedProduct = await prisma.product.update({
+      where: { id: Number(productId) },
+      data: {
+        name: productName,
+        price: productPrice,
+        description: productDescription,
+        stock: productStock,
+        categoryId: categoryId,
+        images: {
+          deleteMany: {}, // This will delete the old images
+          create: uploadedImages, // Create new image records
+        },
+      },
+    });
+
+    // Send a success response
+    res.status(200).json({
+      success: true,
+      message: "Product updated successfully.",
+      payload: updatedProduct,
+    });
+  } catch (error) {
+    next(error); // Pass the error to the error-handling middleware
+  }
+};
 
 const remove: RequestHandler<
   removeProductParamsDT,
