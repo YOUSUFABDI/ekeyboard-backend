@@ -1,13 +1,13 @@
-import { RequestHandler } from "express";
-import createHttpError from "http-errors";
-import prisma from "../../prisma/client";
+import { RequestHandler } from "express"
+import createHttpError from "http-errors"
+import prisma from "../../prisma/client"
 import {
   CreateProductDT,
   UpdateProductDT,
   removeProductParamsDT,
   updateProductParamsDT,
-} from "../types/product";
-import cloudinary from "../util/cloudinary";
+} from "../types/product"
+import cloudinary from "../util/cloudinary"
 
 const findAll: RequestHandler = async (req, res, next) => {
   try {
@@ -16,12 +16,12 @@ const findAll: RequestHandler = async (req, res, next) => {
         images: true,
         category: true,
       },
-    });
-    res.success("", products);
+    })
+    res.success("", products)
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
 const findOne: RequestHandler<
   { productId: number },
@@ -30,9 +30,9 @@ const findOne: RequestHandler<
   unknown
 > = async (req, res, next) => {
   try {
-    const { productId } = req.params;
+    const { productId } = req.params
     if (!productId) {
-      throw createHttpError(404, "ProductId is required");
+      throw createHttpError(404, "ProductId is required")
     }
 
     const product = await prisma.product.findUnique({
@@ -41,16 +41,16 @@ const findOne: RequestHandler<
         images: true,
         category: true,
       },
-    });
+    })
     if (!product) {
-      throw createHttpError(404, "Product not found");
+      throw createHttpError(404, "Product not found")
     }
 
-    res.success("", product);
+    res.success("", product)
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
 const create: RequestHandler<
   unknown,
@@ -66,7 +66,7 @@ const create: RequestHandler<
       productImage,
       productStock,
       categoryId,
-    } = req.body;
+    } = req.body
 
     if (
       !productName ||
@@ -76,7 +76,7 @@ const create: RequestHandler<
       !productImage ||
       !categoryId
     ) {
-      throw createHttpError(400, "All fields are required");
+      throw createHttpError(400, "All fields are required")
     }
 
     // Check if images are URLs or base64 and upload accordingly
@@ -86,18 +86,18 @@ const create: RequestHandler<
           // Handle as URL
           const result = await cloudinary.uploader.upload(image, {
             // You can specify more options here if needed
-          });
-          return { imageUrl: result.secure_url };
+          })
+          return { imageUrl: result.secure_url }
         } else {
           // Handle as base64 data
-          const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+          const base64Data = image.replace(/^data:image\/\w+;base64,/, "")
           const result = await cloudinary.uploader.upload(
             `data:image/png;base64,${base64Data}`
-          );
-          return { imageUrl: result.secure_url };
+          )
+          return { imageUrl: result.secure_url }
         }
       })
-    );
+    )
 
     const product = await prisma.product.create({
       data: {
@@ -113,13 +113,13 @@ const create: RequestHandler<
           create: uploadedImages,
         },
       },
-    });
+    })
 
-    res.success("Product created successfully", product);
+    res.success("Product created successfully", product)
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
 const update: RequestHandler<
   updateProductParamsDT,
@@ -128,9 +128,9 @@ const update: RequestHandler<
   unknown
 > = async (req, res, next) => {
   try {
-    const { productId } = req.params;
+    const { productId } = req.params
     if (!productId) {
-      throw createHttpError(400, "Product ID is required.");
+      throw createHttpError(400, "Product ID is required.")
     }
 
     const {
@@ -140,7 +140,7 @@ const update: RequestHandler<
       productImage,
       productStock,
       categoryId,
-    } = req.body;
+    } = req.body
 
     // Validate all required fields
     if (
@@ -151,17 +151,17 @@ const update: RequestHandler<
       !productImage || // Assuming this is an array of strings
       !categoryId
     ) {
-      throw createHttpError(400, "All fields are required");
+      throw createHttpError(400, "All fields are required")
     }
 
     // Fetch the existing product with images
     const existingProduct = await prisma.product.findUnique({
       where: { id: Number(productId) },
       include: { images: true }, // Include the images relation
-    });
+    })
 
     if (!existingProduct) {
-      throw createHttpError(404, "Product not found.");
+      throw createHttpError(404, "Product not found.")
     }
 
     // If images are being updated, handle Cloudinary operations
@@ -169,47 +169,48 @@ const update: RequestHandler<
       // Loop through existing images and delete from Cloudinary
       for (const oldImage of existingProduct.images) {
         // Assume oldImage has a public_id to delete
-        await cloudinary.uploader.destroy(oldImage.id); // Adjust this line based on your structure
+        await cloudinary.uploader.destroy(oldImage.id) // Adjust this line based on your structure
       }
     }
 
     // Upload new images to Cloudinary
     const uploadedImages = await Promise.all(
       productImage.map(async (imageUrl: string) => {
-        const result = await cloudinary.uploader.upload(imageUrl);
+        const result = await cloudinary.uploader.upload(imageUrl) // Ensure this is correct
         return {
-          productId: Number(productId), // Associate with the current product
-          imageUrl: result.secure_url, // Save URL of the uploaded image
-        };
+          imageUrl: result.secure_url, // Use secure_url, not public_id or any other field
+        }
       })
-    );
+    )
 
     // Update product details in the database
     const updatedProduct = await prisma.product.update({
-      where: { id: Number(productId) },
+      where: {
+        id: Number(productId), // Use the dynamic product ID
+      },
       data: {
         name: productName,
         price: productPrice,
         description: productDescription,
         stock: productStock,
-        categoryId: categoryId,
+        categoryId: categoryId, // Correct category field
         images: {
-          deleteMany: {}, // This will delete the old images
-          create: uploadedImages, // Create new image records
+          deleteMany: {}, // Delete all old images for the product
+          create: uploadedImages,
         },
       },
-    });
+    })
 
     // Send a success response
     res.status(200).json({
       success: true,
       message: "Product updated successfully.",
       payload: updatedProduct,
-    });
+    })
   } catch (error) {
-    next(error); // Pass the error to the error-handling middleware
+    next(error) // Pass the error to the error-handling middleware
   }
-};
+}
 
 const remove: RequestHandler<
   removeProductParamsDT,
@@ -218,22 +219,22 @@ const remove: RequestHandler<
   unknown
 > = async (req, res, next) => {
   try {
-    const { productId } = req.params;
+    const { productId } = req.params
     if (!productId) {
-      throw createHttpError(404, "ProductId is required");
+      throw createHttpError(404, "ProductId is required")
     }
 
     await prisma.product.delete({
       where: { id: Number(productId) },
-    });
+    })
 
-    res.success("Product deleted successfully");
+    res.success("Product deleted successfully")
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
-const Overview: RequestHandler = async (req, res, next) => {};
+const Overview: RequestHandler = async (req, res, next) => {}
 
 export default {
   create,
@@ -243,4 +244,4 @@ export default {
   findOne,
 
   Overview,
-};
+}
