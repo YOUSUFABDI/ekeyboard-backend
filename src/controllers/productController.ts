@@ -4,6 +4,7 @@ import prisma from "../../prisma/client"
 import {
   CreateProductDT,
   UpdateProductDT,
+  deleteMultipleProductsDT,
   removeProductParamsDT,
   updateProductParamsDT,
 } from "../types/product"
@@ -79,23 +80,13 @@ const create: RequestHandler<
       throw createHttpError(400, "All fields are required")
     }
 
-    // Check if images are URLs or base64 and upload accordingly
+    // Upload images to Cloudinary and store both public_id and secure_url
     const uploadedImages = await Promise.all(
       productImage.map(async (image) => {
-        if (image.startsWith("http")) {
-          // Handle as URL
-          const result = await cloudinary.uploader.upload(image, {
-            // You can specify more options here if needed
-          })
-          return { imageUrl: result.secure_url }
-        } else {
-          // Handle as base64 data
-          const base64Data = image.replace(/^data:image\/\w+;base64,/, "")
-          const result = await cloudinary.uploader.upload(
-            `data:image/png;base64,${base64Data}`
-          )
-          return { imageUrl: result.secure_url }
-        }
+        const result = await cloudinary.uploader.upload(image, {
+          folder: "Ekeyboard",
+        })
+        return { imageUrl: result.secure_url, public_id: result.public_id } // Include public_id
       })
     )
 
@@ -110,7 +101,7 @@ const create: RequestHandler<
           connect: { id: categoryId },
         },
         images: {
-          create: uploadedImages,
+          create: uploadedImages, // Now includes both imageUrl and public_id
         },
       },
     })
@@ -168,17 +159,17 @@ const update: RequestHandler<
     if (existingProduct.images && existingProduct.images.length > 0) {
       // Loop through existing images and delete from Cloudinary
       for (const oldImage of existingProduct.images) {
-        // Assume oldImage has a public_id to delete
-        await cloudinary.uploader.destroy(oldImage.id) // Adjust this line based on your structure
+        await cloudinary.uploader.destroy(oldImage.public_id) // Use public_id for deletion
       }
     }
 
     // Upload new images to Cloudinary
     const uploadedImages = await Promise.all(
       productImage.map(async (imageUrl: string) => {
-        const result = await cloudinary.uploader.upload(imageUrl) // Ensure this is correct
+        const result = await cloudinary.uploader.upload(imageUrl)
         return {
-          imageUrl: result.secure_url, // Use secure_url, not public_id or any other field
+          imageUrl: result.secure_url,
+          public_id: result.public_id, // Include public_id in the new images
         }
       })
     )
@@ -186,29 +177,28 @@ const update: RequestHandler<
     // Update product details in the database
     const updatedProduct = await prisma.product.update({
       where: {
-        id: Number(productId), // Use the dynamic product ID
+        id: Number(productId),
       },
       data: {
         name: productName,
         price: productPrice,
         description: productDescription,
         stock: productStock,
-        categoryId: categoryId, // Correct category field
+        categoryId: categoryId,
         images: {
           deleteMany: {}, // Delete all old images for the product
-          create: uploadedImages,
+          create: uploadedImages, // Include both imageUrl and public_id
         },
       },
     })
 
-    // Send a success response
     res.status(200).json({
       success: true,
       message: "Product updated successfully.",
       payload: updatedProduct,
     })
   } catch (error) {
-    next(error) // Pass the error to the error-handling middleware
+    next(error)
   }
 }
 
@@ -224,11 +214,88 @@ const remove: RequestHandler<
       throw createHttpError(404, "ProductId is required")
     }
 
+    // Fetch the product including its images
+    const product = await prisma.product.findUnique({
+      where: { id: Number(productId) },
+      include: { images: true }, // Fetch images related to the product
+    })
+
+    if (!product) {
+      throw createHttpError(404, "Product not found")
+    }
+
+    // Delete the images from Cloudinary
+    if (product.images && product.images.length > 0) {
+      const imageDeletionPromises = product.images.map(async (image) => {
+        return cloudinary.uploader.destroy(image.public_id) // Use public_id to delete images from Cloudinary
+      })
+      await Promise.all(imageDeletionPromises) // Wait for all image deletions to complete
+    }
+
+    // Delete the product from the database
     await prisma.product.delete({
       where: { id: Number(productId) },
     })
 
-    res.success("Product deleted successfully")
+    res.success("Product and associated images deleted successfully")
+  } catch (error) {
+    next(error)
+  }
+}
+
+const deleteMultipleProducts: RequestHandler<
+  unknown,
+  unknown,
+  deleteMultipleProductsDT,
+  unknown
+> = async (req, res, next) => {
+  try {
+    const { productIds } = req.body
+
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      throw createHttpError(400, "Please provide a valid array of product IDs.")
+    }
+
+    // Fetch the products from the database to get their image public_ids
+    const products = await prisma.product.findMany({
+      where: {
+        id: { in: productIds },
+      },
+      include: { images: true }, // Assuming the 'public_id' field is now available
+    })
+
+    if (products.length === 0) {
+      throw createHttpError(
+        404,
+        "No products were found with the provided IDs."
+      )
+    }
+
+    // Delete product images from Cloudinary
+    const imageDeletionPromises = products.flatMap((product) =>
+      product.images.map(
+        (image) => cloudinary.uploader.destroy(image.public_id) // Now referencing the 'public_id'
+      )
+    )
+    await Promise.all(imageDeletionPromises) // Wait for all image deletions to finish
+
+    // Delete the products from the database
+    const deletedProducts = await prisma.product.deleteMany({
+      where: {
+        id: {
+          in: productIds,
+        },
+      },
+    })
+
+    if (deletedProducts.count === 0) {
+      throw createHttpError(404, "No products were deleted.")
+    }
+
+    res.success(
+      "Products and their images were deleted successfully.",
+      deletedProducts.count
+    )
   } catch (error) {
     next(error)
   }
@@ -240,6 +307,7 @@ export default {
   create,
   update,
   remove,
+  deleteMultipleProducts,
   findAll,
   findOne,
 

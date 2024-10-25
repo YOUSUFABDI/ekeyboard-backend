@@ -12,6 +12,7 @@ const {
   create,
   update,
   remove,
+  deleteMultipleProducts,
 
   Overview,
 } = productController
@@ -26,6 +27,7 @@ router.use(restrictTo("admin"))
 router.post("/create", create)
 router.patch("/update/:productId", update)
 router.delete("/remove/:productId", remove)
+router.delete("/remove-many", deleteMultipleProducts)
 
 router.get("/get-overviews", Overview)
 

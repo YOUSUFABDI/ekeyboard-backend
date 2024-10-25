@@ -1,30 +1,34 @@
 export type CreateProductDT = {
-  productName: string;
-  productPrice: number;
-  productDescription: string;
-  productImage: string[];
-  productStock: number;
-  categoryId: number;
-};
+  productName: string
+  productPrice: number
+  productDescription: string
+  productImage: string[]
+  productStock: number
+  categoryId: number
+}
 
 export type UpdateProductDT = {
-  productName: string;
-  productPrice: number;
-  productDescription: string;
-  productImage: string[];
-  productLikes: number;
-  productStock: number;
-  categoryId: number;
-};
+  productName: string
+  productPrice: number
+  productDescription: string
+  productImage: string[]
+  productLikes: number
+  productStock: number
+  categoryId: number
+}
 
 export type updateProductParamsDT = {
-  productId: string;
-};
+  productId: string
+}
 
 export type removeProductParamsDT = {
-  productId: string;
-};
+  productId: string
+}
 
 export type CreateCategoryDT = {
-  name: string;
-};
+  name: string
+}
+
+export type deleteMultipleProductsDT = {
+  productIds: number[]
+}

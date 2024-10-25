@@ -61,6 +61,7 @@ model ProductImages {
   id        Int     @id @default(autoincrement())
   productId Int
   imageUrl  String
+  public_id String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade, map: "ProductImages Relationship")
 
   @@index([productId], map: "ProductImages Relationship")
