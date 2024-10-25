@@ -166,7 +166,9 @@ const update: RequestHandler<
     // Upload new images to Cloudinary
     const uploadedImages = await Promise.all(
       productImage.map(async (imageUrl: string) => {
-        const result = await cloudinary.uploader.upload(imageUrl)
+        const result = await cloudinary.uploader.upload(imageUrl, {
+          folder: "Ekeyboard",
+        })
         return {
           imageUrl: result.secure_url,
           public_id: result.public_id, // Include public_id in the new images
