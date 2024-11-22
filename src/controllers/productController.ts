@@ -303,6 +303,38 @@ const deleteMultipleProducts: RequestHandler<
   }
 }
 
+const likeProduct: RequestHandler<
+  { id: string },
+  unknown,
+  unknown,
+  unknown
+> = async (req, res, next) => {
+  try {
+    const { id } = req.params
+
+    const productId = parseInt(id, 10)
+    if (isNaN(productId)) {
+      throw createHttpError(404, "Invalid Product ID")
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+    })
+    if (!product) {
+      throw createHttpError(404, "ProductId not found.")
+    }
+
+    const updatedProduct = await prisma.product.update({
+      where: { id: productId },
+      data: { likes: product.likes + 1 },
+    })
+
+    res.success("", updatedProduct)
+  } catch (error) {
+    next(error)
+  }
+}
+
 const Overview: RequestHandler = async (req, res, next) => {}
 
 export default {
@@ -312,6 +344,7 @@ export default {
   deleteMultipleProducts,
   findAll,
   findOne,
+  likeProduct,
 
   Overview,
 }
