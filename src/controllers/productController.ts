@@ -9,6 +9,7 @@ import {
   updateProductParamsDT,
 } from "../types/product"
 import cloudinary from "../util/cloudinary"
+import { CustomRequestWithUser } from "types/auth"
 
 const findAll: RequestHandler = async (req, res, next) => {
   try {
@@ -303,15 +304,51 @@ const deleteMultipleProducts: RequestHandler<
   }
 }
 
-const likeProduct: RequestHandler<
+// const likeProduct: RequestHandler<
+//   { id: string },
+//   unknown,
+//   unknown,
+//   unknown
+// > = async (req, res, next) => {
+//   try {
+//     const { id } = req.params
+
+//     const productId = parseInt(id, 10)
+//     if (isNaN(productId)) {
+//       throw createHttpError(404, "Invalid Product ID")
+//     }
+
+//     const product = await prisma.product.findUnique({
+//       where: { id: productId },
+//     })
+//     if (!product) {
+//       throw createHttpError(404, "ProductId not found.")
+//     }
+
+//     const updatedProduct = await prisma.product.update({
+//       where: { id: productId },
+//       data: { likes: product.likes + 1 },
+//     })
+
+//     res.success("", updatedProduct)
+//   } catch (error) {
+//     next(error)
+//   }
+// }
+
+const toggleLikeProduct: RequestHandler<
   { id: string },
   unknown,
   unknown,
   unknown
-> = async (req, res, next) => {
+> = async (req: CustomRequestWithUser, res, next): Promise<void> => {
   try {
-    const { id } = req.params
+    const userId = req.user?.id
+    if (!userId || typeof userId !== "number") {
+      throw createHttpError(401, "User not authenticated")
+    }
 
+    const { id } = req.params
     const productId = parseInt(id, 10)
     if (isNaN(productId)) {
       throw createHttpError(404, "Invalid Product ID")
@@ -321,15 +358,48 @@ const likeProduct: RequestHandler<
       where: { id: productId },
     })
     if (!product) {
-      throw createHttpError(404, "ProductId not found.")
+      throw createHttpError(404, "Product not found")
     }
 
-    const updatedProduct = await prisma.product.update({
-      where: { id: productId },
-      data: { likes: product.likes + 1 },
+    const existingLike = await prisma.productLike.findUnique({
+      where: {
+        userId_productId: {
+          userId,
+          productId,
+        },
+      },
     })
 
-    res.success("", updatedProduct)
+    let message = ""
+    if (existingLike) {
+      // Unlike the product
+      await prisma.productLike.delete({
+        where: { id: existingLike.id },
+      })
+
+      // Decrement the likes count in the product table
+      await prisma.product.update({
+        where: { id: productId },
+        data: { likes: { decrement: 1 } },
+      })
+
+      message = "Product unliked successfully"
+    } else {
+      // Like the product
+      await prisma.productLike.create({
+        data: { userId, productId },
+      })
+
+      // Increment the likes count in the product table
+      await prisma.product.update({
+        where: { id: productId },
+        data: { likes: { increment: 1 } },
+      })
+
+      message = "Product liked successfully"
+    }
+
+    res.success(message)
   } catch (error) {
     next(error)
   }
@@ -344,7 +414,7 @@ export default {
   deleteMultipleProducts,
   findAll,
   findOne,
-  likeProduct,
+  toggleLikeProduct,
 
   Overview,
 }

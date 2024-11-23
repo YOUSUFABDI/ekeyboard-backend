@@ -13,7 +13,7 @@ const {
   update,
   remove,
   deleteMultipleProducts,
-  likeProduct,
+  toggleLikeProduct,
 
   Overview,
 } = productController
@@ -22,7 +22,7 @@ router.use(protect)
 
 router.get("/", findAll)
 router.get("/:productId", findOne)
-router.post("/like/:id", likeProduct)
+router.post("/like/:id", toggleLikeProduct)
 
 router.use(restrictTo("admin"))
 

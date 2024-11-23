@@ -8,20 +8,21 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  fullName  String
-  username  String   @unique
-  photo     String   @default("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6NYW3a3rRNPiE4LaF3IPYE3n23CFaNmHe8pvoPqyE9g&s")
-  address   String
-  phone     String
-  age       Int
-  email     String   @unique
-  password  String
-  role      String   @default("user")
-  active    Boolean  @default(true)
-  createdDT DateTime @default(now())
-  OTP       OTP[]
-  orders    Order[]
+  id          Int           @id @default(autoincrement())
+  fullName    String
+  username    String        @unique
+  photo       String        @default("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6NYW3a3rRNPiE4LaF3IPYE3n23CFaNmHe8pvoPqyE9g&s")
+  address     String
+  phone       String
+  age         Int
+  email       String        @unique
+  password    String
+  role        String        @default("user")
+  active      Boolean       @default(true)
+  createdDT   DateTime      @default(now())
+  OTP         OTP[]
+  orders      Order[]
+  ProductLike ProductLike[]
 }
 
 model OTP {
@@ -47,6 +48,7 @@ model Product {
   orders      Order[]
   category    ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade, map: "Category Relationship")
   images      ProductImages[]
+  ProductLike ProductLike[]
 
   @@index([categoryId], map: "Category Relationship")
 }
@@ -65,6 +67,19 @@ model ProductImages {
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade, map: "ProductImages Relationship")
 
   @@index([productId], map: "ProductImages Relationship")
+}
+
+model ProductLike {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  createdDT DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "UserProductLike Relationship")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade, map: "ProductUserLike Relationship")
+
+  @@unique([userId, productId], map: "UniqueUserProductLike")
+  @@index([userId], map: "UserProductLike Index")
+  @@index([productId], map: "ProductUserLike Index")
 }
 
 model Order {
