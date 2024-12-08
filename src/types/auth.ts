@@ -46,3 +46,7 @@ export type UpdatePasswordDT = {
   currentPassword: string
   newPassword: string
 }
+
+export type UpdateProfileImgDT = {
+  profileImg: string
+}

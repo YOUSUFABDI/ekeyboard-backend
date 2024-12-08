@@ -6,6 +6,7 @@ import {
   SignUpBodyDT,
   UdateUserDT,
   UpdatePasswordDT,
+  UpdateProfileImgDT,
   VerifyOtpDT,
 } from "../types/auth"
 import createHttpError from "http-errors"
@@ -13,6 +14,7 @@ import bcrypt from "bcrypt"
 import { generateToken } from "../util/generateToken"
 import { generateOTP } from "../util/generateOTP"
 import { sendOtpEmail } from "../util/sendOtpEmail"
+import cloudinary from "../util/cloudinary"
 
 const signUp: RequestHandler<unknown, unknown, SignUpBodyDT, unknown> = async (
   req,
@@ -296,6 +298,57 @@ const updatePassword: RequestHandler<
   }
 }
 
+const changeProfileImg: RequestHandler<
+  unknown,
+  unknown,
+  UpdateProfileImgDT,
+  unknown
+> = async (req, res, next) => {
+  try {
+    const { profileImg } = req.body
+    if (!profileImg) {
+      throw createHttpError(400, "profileImg is required.")
+    }
+
+    const authenticatedUserId = (req as CustomRequestWithUser).user.id
+    if (!authenticatedUserId) {
+      throw createHttpError(401, "User ID not found in request.")
+    }
+
+    const authenticatedUser = await prisma.user.findFirst({
+      where: { id: authenticatedUserId },
+    })
+    if (!authenticatedUser) {
+      throw createHttpError(404, "User not found.")
+    }
+
+    if (
+      authenticatedUser.photo &&
+      authenticatedUser.photo !==
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6NYW3a3rRNPiE4LaF3IPYE3n23CFaNmHe8pvoPqyE9g&s"
+    ) {
+      const publicId = authenticatedUser.photo.split("/").pop()?.split(".")[0] // Extract public_id
+      if (publicId) {
+        await cloudinary.uploader.destroy(publicId)
+      }
+    }
+
+    const uploadResponse = await cloudinary.uploader.upload(profileImg, {
+      folder: "Ekeyboard",
+      resource_type: "image",
+    })
+
+    const updatedUser = await prisma.user.update({
+      where: { id: authenticatedUserId },
+      data: { photo: uploadResponse.secure_url },
+    })
+
+    res.success("Profile image updated successfully", updatedUser)
+  } catch (error) {
+    next(error)
+  }
+}
+
 export default {
   signUp,
   verifyOtpCode,
@@ -303,4 +356,5 @@ export default {
   getAuthenticatedUser,
   updateAdminInfo,
   updatePassword,
+  changeProfileImg,
 }
