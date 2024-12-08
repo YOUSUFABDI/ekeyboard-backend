@@ -21,7 +21,7 @@ router.get("/me", protect, getAuthenticatedUser)
 router.put("/update-password", protect, updatePassword)
 
 // for admin users only
-router.use(restrictTo("admin"))
+// router.use(restrictTo("admin"))
 
 router.put("/update-admin-info", protect, updateAdminInfo)
 // router.get("/delete-user", protect, deleteUser)
