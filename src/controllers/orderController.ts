@@ -56,12 +56,26 @@ const getOrders: RequestHandler = async (
   next
 ) => {
   try {
-    const userId = req.user.id
-
     const orders = await prisma.order.findMany({
-      where: { userId },
       include: {
-        product: true,
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            phone: true,
+          },
+        },
+        product: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+          },
+        },
+      },
+      orderBy: {
+        createdDT: "desc",
       },
     })
 
@@ -71,4 +85,40 @@ const getOrders: RequestHandler = async (
   }
 }
 
-export default { makeOrder, getOrders }
+const changeOrderStatus: RequestHandler<
+  { id: string },
+  unknown,
+  { status: string },
+  unknown
+> = async (req: CustomRequestWithUser, res, next) => {
+  try {
+    const { id } = req.params
+    const { status } = req.body
+
+    const validStatuses = ["pending", "delivered", "completed"]
+    if (!validStatuses.includes(status)) {
+      throw createHttpError(
+        400,
+        `Invalid status. Valid statuses are: ${validStatuses.join(", ")}`
+      )
+    }
+
+    const order = await prisma.order.findUnique({
+      where: { id: parseInt(id, 10) },
+    })
+    if (!order) {
+      throw createHttpError(404, `Order not found`)
+    }
+
+    const updatedOrder = await prisma.order.update({
+      where: { id: parseInt(id, 10) },
+      data: { status },
+    })
+
+    res.success(`Order status updated to ${status}`, updatedOrder)
+  } catch (error) {
+    next(error)
+  }
+}
+
+export default { makeOrder, getOrders, changeOrderStatus }

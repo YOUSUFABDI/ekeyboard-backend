@@ -18,9 +18,10 @@ const {
   Overview,
 } = productController
 
+router.get("/", findAll)
+
 router.use(protect)
 
-router.get("/", findAll)
 router.get("/:productId", findOne)
 router.post("/like/:id", toggleLikeProduct)
 
