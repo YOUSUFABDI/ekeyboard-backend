@@ -21,13 +21,6 @@ export type LoginBodyDT = {
   password: string
 }
 
-// export interface CustomRequestWithUser extends Request {
-//   user?: {
-//     id: number
-//     role: string
-//   }
-// }
-
 export interface CustomRequestWithUser extends Request<{ id: string }> {
   user?: {
     id: number
