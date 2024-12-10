@@ -230,7 +230,7 @@ const remove: RequestHandler<
     // Delete the images from Cloudinary
     if (product.images && product.images.length > 0) {
       const imageDeletionPromises = product.images.map(async (image) => {
-        return cloudinary.uploader.destroy(image.public_id) // Use public_id to delete images from Cloudinary
+        return cloudinary.uploader.destroy(`Ekeyboard/${image.public_id}`) // Use public_id to delete images from Cloudinary
       })
       await Promise.all(imageDeletionPromises) // Wait for all image deletions to complete
     }
@@ -277,7 +277,7 @@ const deleteMultipleProducts: RequestHandler<
     // Delete product images from Cloudinary
     const imageDeletionPromises = products.flatMap((product) =>
       product.images.map(
-        (image) => cloudinary.uploader.destroy(image.public_id) // Now referencing the 'public_id'
+        (image) => cloudinary.uploader.destroy(`Ekeyboard/${image.public_id}`) // Now referencing the 'public_id'
       )
     )
     await Promise.all(imageDeletionPromises) // Wait for all image deletions to finish
