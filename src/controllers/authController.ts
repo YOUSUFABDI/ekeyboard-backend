@@ -322,27 +322,31 @@ const changeProfileImg: RequestHandler<
       throw createHttpError(404, "User not found.")
     }
 
+    // Extract and delete the old profile image if it exists
     if (
       authenticatedUser.photo &&
       authenticatedUser.photo !==
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6NYW3a3rRNPiE4LaF3IPYE3n23CFaNmHe8pvoPqyE9g&s"
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6NYW3a3rRNPiE4LaF3IPYE3n23CFaNmHe8pvoPqyE9g&s" // Default placeholder image
     ) {
       const publicId = authenticatedUser.photo.split("/").pop()?.split(".")[0] // Extract public_id
       if (publicId) {
-        await cloudinary.uploader.destroy(publicId)
+        await cloudinary.uploader.destroy(publicId) // Delete from Cloudinary
       }
     }
 
+    // Upload the new image to Cloudinary
     const uploadResponse = await cloudinary.uploader.upload(profileImg, {
       folder: "Ekeyboard",
       resource_type: "image",
     })
 
+    // Update the user's profile image in the database
     const updatedUser = await prisma.user.update({
       where: { id: authenticatedUserId },
       data: { photo: uploadResponse.secure_url },
     })
 
+    // Respond with success
     res.success("Profile image updated successfully", updatedUser)
   } catch (error) {
     next(error)
