@@ -322,15 +322,22 @@ const changeProfileImg: RequestHandler<
       throw createHttpError(404, "User not found.")
     }
 
-    // Extract and delete the old profile image if it exists
+    // Delete the old profile image from Cloudinary if it exists and is not the default placeholder
     if (
       authenticatedUser.photo &&
       authenticatedUser.photo !==
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6NYW3a3rRNPiE4LaF3IPYE3n23CFaNmHe8pvoPqyE9g&s" // Default placeholder image
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6NYW3a3rRNPiE4LaF3IPYE3n23CFaNmHe8pvoPqyE9g&s"
     ) {
-      const publicId = authenticatedUser.photo.split("/").pop()?.split(".")[0] // Extract public_id
-      if (publicId) {
-        await cloudinary.uploader.destroy(publicId) // Delete from Cloudinary
+      try {
+        const urlSegments = authenticatedUser.photo.split("/")
+        const publicIdWithExtension = urlSegments[urlSegments.length - 1]
+        const publicId = publicIdWithExtension.split(".")[0] // Extract public_id without file extension
+        await cloudinary.uploader.destroy(`Ekeyboard/${publicId}`) // Include folder in publicId path
+      } catch (deleteError) {
+        console.error(
+          "Failed to delete old image from Cloudinary:",
+          deleteError
+        )
       }
     }
 
