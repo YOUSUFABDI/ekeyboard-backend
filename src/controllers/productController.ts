@@ -255,39 +255,50 @@ const deleteMultipleProducts: RequestHandler<
   try {
     const { productIds } = req.body
 
+    // Validate the input
     if (!Array.isArray(productIds) || productIds.length === 0) {
       throw createHttpError(400, "Please provide a valid array of product IDs.")
     }
 
-    // Fetch the products from the database to get their image public_ids
-    const products = await prisma.product.findMany({
+    // Fetch product images' public_ids from the database
+    const productImages = await prisma.productImages.findMany({
       where: {
-        id: { in: productIds },
+        productId: { in: productIds },
       },
-      include: { images: true }, // Assuming the 'public_id' field is now available
+      select: {
+        public_id: true, // Select only the public_id field
+      },
     })
 
-    if (products.length === 0) {
+    if (productImages.length === 0) {
       throw createHttpError(
         404,
-        "No products were found with the provided IDs."
+        "No associated images found for the provided product IDs."
       )
     }
 
     // Delete product images from Cloudinary
-    const imageDeletionPromises = products.flatMap((product) =>
-      product.images.map(
-        (image) => cloudinary.uploader.destroy(`Ekeyboard/${image.public_id}`) // Now referencing the 'public_id'
-      )
-    )
-    await Promise.all(imageDeletionPromises) // Wait for all image deletions to finish
+    const imageDeletionPromises = productImages.map(async (image) => {
+      try {
+        const deletionResult = await cloudinary.uploader.destroy(
+          `Ekeyboard/${image.public_id}`
+        )
+        console.log(`Deleted image ${image.public_id}:`, deletionResult)
+      } catch (error) {
+        console.error(`Failed to delete image ${image.public_id}:`, error)
+      }
+    })
 
-    // Delete the products from the database
+    await Promise.all(imageDeletionPromises) // Ensure all deletions are complete
+
+    // Delete the products and their associated records from the database
+    await prisma.productImages.deleteMany({
+      where: { productId: { in: productIds } },
+    })
+
     const deletedProducts = await prisma.product.deleteMany({
       where: {
-        id: {
-          in: productIds,
-        },
+        id: { in: productIds },
       },
     })
 
@@ -295,6 +306,7 @@ const deleteMultipleProducts: RequestHandler<
       throw createHttpError(404, "No products were deleted.")
     }
 
+    // Respond with success
     res.success(
       "Products and their images were deleted successfully.",
       deletedProducts.count
@@ -303,38 +315,6 @@ const deleteMultipleProducts: RequestHandler<
     next(error)
   }
 }
-
-// const likeProduct: RequestHandler<
-//   { id: string },
-//   unknown,
-//   unknown,
-//   unknown
-// > = async (req, res, next) => {
-//   try {
-//     const { id } = req.params
-
-//     const productId = parseInt(id, 10)
-//     if (isNaN(productId)) {
-//       throw createHttpError(404, "Invalid Product ID")
-//     }
-
-//     const product = await prisma.product.findUnique({
-//       where: { id: productId },
-//     })
-//     if (!product) {
-//       throw createHttpError(404, "ProductId not found.")
-//     }
-
-//     const updatedProduct = await prisma.product.update({
-//       where: { id: productId },
-//       data: { likes: product.likes + 1 },
-//     })
-
-//     res.success("", updatedProduct)
-//   } catch (error) {
-//     next(error)
-//   }
-// }
 
 const toggleLikeProduct: RequestHandler<
   { id: string },
