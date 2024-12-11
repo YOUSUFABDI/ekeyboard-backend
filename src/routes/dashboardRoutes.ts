@@ -6,11 +6,12 @@ const router = express.Router()
 
 const { restrictTo, protect } = authMiddleware
 
-const { getTopSellingProducts } = dashboardController
+const { getTopSellingProducts, recentOrders } = dashboardController
 
 router.use(protect)
 router.use(restrictTo("admin"))
 
 router.get("/top-selling", getTopSellingProducts)
+router.get("/recent-orders", recentOrders)
 
 export default router
