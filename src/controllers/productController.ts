@@ -229,10 +229,15 @@ const remove: RequestHandler<
 
     // Delete the images from Cloudinary
     if (product.images && product.images.length > 0) {
-      const imageDeletionPromises = product.images.map(async (image) => {
-        return cloudinary.uploader.destroy(`Ekeyboard/${image.public_id}`) // Use public_id to delete images from Cloudinary
-      })
-      await Promise.all(imageDeletionPromises) // Wait for all image deletions to complete
+      await Promise.all(
+        product.images.map(async (image) => {
+          try {
+            await cloudinary.uploader.destroy(image.public_id) // Correctly use public_id
+          } catch (error) {
+            console.error(`Failed to delete image ${image.public_id}:`, error)
+          }
+        })
+      )
     }
 
     // Delete the product from the database
@@ -270,26 +275,18 @@ const deleteMultipleProducts: RequestHandler<
       },
     })
 
-    if (productImages.length === 0) {
-      throw createHttpError(
-        404,
-        "No associated images found for the provided product IDs."
+    if (productImages.length > 0) {
+      // Delete product images from Cloudinary
+      await Promise.all(
+        productImages.map(async (image) => {
+          try {
+            await cloudinary.uploader.destroy(image.public_id) // Correctly use public_id
+          } catch (error) {
+            console.error(`Failed to delete image ${image.public_id}:`, error)
+          }
+        })
       )
     }
-
-    // Delete product images from Cloudinary
-    const imageDeletionPromises = productImages.map(async (image) => {
-      try {
-        const deletionResult = await cloudinary.uploader.destroy(
-          `Ekeyboard/${image.public_id}`
-        )
-        console.log(`Deleted image ${image.public_id}:`, deletionResult)
-      } catch (error) {
-        console.error(`Failed to delete image ${image.public_id}:`, error)
-      }
-    })
-
-    await Promise.all(imageDeletionPromises) // Ensure all deletions are complete
 
     // Delete the products and their associated records from the database
     await prisma.productImages.deleteMany({
