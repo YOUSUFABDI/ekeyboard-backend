@@ -219,8 +219,18 @@ const resetPassword: RequestHandler<
   unknown
 > = async (req, res, next) => {
   const { otp, newPassword } = req.body
-  if (!otp || !newPassword) {
-    throw createHttpError(400, "OTP and new password are required")
+
+  // Validate the inputs
+  if (
+    !otp ||
+    !newPassword ||
+    typeof otp !== "number" ||
+    !Number.isInteger(otp)
+  ) {
+    throw createHttpError(
+      400,
+      "OTP must be a valid number and a new password is required"
+    )
   }
 
   try {
