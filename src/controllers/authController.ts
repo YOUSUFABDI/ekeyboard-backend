@@ -133,7 +133,9 @@ const verifyOtpCode: RequestHandler<
     })
 
     res.success("User registered successfully.", {
+      username: existingOTP.user.username,
       token: generateToken(existingOTP.user.id),
+      role: existingOTP.user.role,
     })
   } catch (error) {
     next(error)
