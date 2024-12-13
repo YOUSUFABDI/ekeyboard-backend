@@ -121,4 +121,41 @@ const changeOrderStatus: RequestHandler<
   }
 }
 
-export default { makeOrder, getOrders, changeOrderStatus }
+const getOrderHistory: RequestHandler = async (
+  req: CustomRequestWithUser,
+  res,
+  next
+) => {
+  try {
+    const userId = req.user?.id
+    if (!userId) {
+      throw createHttpError(401, `Unauthorized`)
+    }
+
+    const orders = await prisma.order.findMany({
+      where: { userId },
+      include: {
+        product: true,
+      },
+      orderBy: {
+        createdDT: "desc",
+      },
+    })
+
+    const formattedOrders = orders.map((order) => ({
+      orderId: order.id,
+      productName: order.product.name,
+      quantity: order.quantity,
+      price: order.product.price,
+      status: order.status,
+      createdDate: order.createdDT,
+    }))
+
+    res.success("", formattedOrders)
+  } catch (error) {
+    console.error("Error fetching order history:", error)
+    next(error)
+  }
+}
+
+export default { makeOrder, getOrders, changeOrderStatus, getOrderHistory }
