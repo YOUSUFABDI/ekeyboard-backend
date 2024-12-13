@@ -9,6 +9,8 @@ const {
   signUp,
   verifyOtpCode,
   login,
+  forgotPassword,
+  resetPassword,
   getAuthenticatedUser,
   updateAdminInfo,
   updatePassword,
@@ -17,6 +19,8 @@ const {
 
 router.post("/", login)
 router.post("/signup", signUp)
+router.post("/forgot-password", forgotPassword)
+router.post("/reset-password", resetPassword)
 router.post("/verfiy-otp", verifyOtpCode)
 router.get("/me", protect, getAuthenticatedUser)
 router.put("/update-password", protect, updatePassword)

@@ -175,6 +175,85 @@ const login: RequestHandler<unknown, unknown, LoginBodyDT, unknown> = async (
   }
 }
 
+const forgotPassword: RequestHandler<
+  unknown,
+  unknown,
+  { email: string },
+  unknown
+> = async (req, res, next) => {
+  const { email } = req.body
+  if (!email) {
+    throw createHttpError(400, "Email is required.")
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } })
+    if (!user) {
+      throw createHttpError(404, "User not found.")
+    }
+
+    const otp = generateOTP()
+
+    // Save OTP in the database
+    await prisma.oTP.create({
+      data: {
+        otp,
+        status: "pending",
+        userId: user.id,
+      },
+    })
+
+    await sendOtpEmail(email, otp)
+
+    res.success(`Password reset OTP sent successfully to ${email}`)
+  } catch (error) {
+    console.error(error)
+    next(error)
+  }
+}
+
+const resetPassword: RequestHandler<
+  unknown,
+  unknown,
+  { otp: number; newPassword: string },
+  unknown
+> = async (req, res, next) => {
+  const { otp, newPassword } = req.body
+  if (!otp || !newPassword) {
+    throw createHttpError(400, "OTP and new password are required")
+  }
+
+  try {
+    const otpEntry = await prisma.oTP.findFirst({
+      where: { otp, status: "pending" },
+      include: { user: true },
+    })
+    if (!otpEntry) {
+      throw createHttpError(400, "Invalid or expired OTP")
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+    // Update the user's password
+    await prisma.user.update({
+      where: { id: otpEntry.userId },
+      data: { password: hashedPassword },
+    })
+
+    // Mark the OTP as used
+    await prisma.oTP.update({
+      where: { id: otpEntry.id },
+      data: { status: "used" },
+    })
+
+    res.success("Password reset successful")
+  } catch (error) {
+    console.error(error)
+    next(error)
+  }
+}
+
 const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
   try {
     const authenticatedUserId = (req as CustomRequestWithUser).user.id
@@ -364,6 +443,8 @@ export default {
   signUp,
   verifyOtpCode,
   login,
+  forgotPassword,
+  resetPassword,
   getAuthenticatedUser,
   updateAdminInfo,
   updatePassword,
