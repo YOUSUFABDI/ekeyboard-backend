@@ -95,7 +95,7 @@ const changeOrderStatus: RequestHandler<
     const { id } = req.params
     const { status } = req.body
 
-    const validStatuses = ["pending", "delivered", "completed"]
+    const validStatuses = ["pending", "delivering", "completed"]
     if (!validStatuses.includes(status)) {
       throw createHttpError(
         400,
